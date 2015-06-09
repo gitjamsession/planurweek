@@ -1,13 +1,16 @@
 package com.beatitudes.planurweek;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,6 +22,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import com.beatitudes.planurweek.data.ScheduleContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -134,8 +139,39 @@ public class ItineraryFragment extends Fragment {
     public class FetchScheduleTask extends AsyncTask<String, Void, String[]> {
 
         public final String LOG_TAG = ItineraryFragment.class.getSimpleName();
+        private final Context mContext;
 
-        public FetchScheduleTask(FragmentActivity activity) {
+        /***public FetchScheduleTask(FragmentActivity activity) {
+        }***/
+        public FetchScheduleTask(Context context) {
+            mContext = context;
+        }
+
+        private long addLocation(String locationSetting, String cityName){ ////, double lat, double lon) {
+
+            // First, check if the location with this city name exists in the db
+            Cursor cursor = mContext.getContentResolver().query(
+                    ScheduleContract.LocationEntry.CONTENT_URI,
+                    new String[]{ScheduleContract.LocationEntry._ID},
+                    ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
+                    new String[]{locationSetting},
+                    null);
+
+            if (cursor.moveToFirst()) {
+                int locationIdIndex = cursor.getColumnIndex(ScheduleContract.LocationEntry._ID);
+                return cursor.getLong(locationIdIndex);
+            } else {
+                ContentValues locationValues = new ContentValues();
+                locationValues.put(ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
+                locationValues.put(ScheduleContract.LocationEntry.COLUMN_CITY_NAME, cityName);
+                ////locationValues.put(LocationEntry.COLUMN_COORD_LAT, lat);
+                ////locationValues.put(LocationEntry.COLUMN_COORD_LONG, lon);
+
+                Uri locationInsertUri = mContext.getContentResolver()
+                        .insert(ScheduleContract.LocationEntry.CONTENT_URI, locationValues);
+
+                return ContentUris.parseId(locationInsertUri);
+            }
         }
 
 
@@ -149,6 +185,12 @@ public class ItineraryFragment extends Fragment {
 
             // Will contain the raw JSON response as a string.
             String itineraryJsonStr = null;
+
+            if (params.length == 0) {
+                return null;
+            }
+            String locationQuery = params[1];
+            String cityName = params[0];
 
             String status = "upcoming";
 
@@ -229,7 +271,7 @@ public class ItineraryFragment extends Fragment {
                 }
             }
             try {
-                return getScheduleDataFromJson(itineraryJsonStr,numDays);
+                return getScheduleDataFromJson(itineraryJsonStr,numDays,locationQuery,cityName);
             }catch (JSONException e){
                 Log.e(LOG_TAG,e.getMessage(),e);
                 e.printStackTrace();
@@ -261,7 +303,7 @@ public class ItineraryFragment extends Fragment {
         return shortenedDateFormat.format(time);
     }
 
-    private String[] getScheduleDataFromJson(String itineraryJsonStr,int numDays)
+    private String[] getScheduleDataFromJson(String itineraryJsonStr,int numDays, String locationSetting, String cityName)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
