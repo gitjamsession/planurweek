@@ -202,10 +202,6 @@ public class ItineraryFragment extends Fragment {
 
             try {
 
-                ////URL url = new URL("http://api.openweathermap.org/data/2.5/forecast/daily?q=94043&mode=json&units=metric&cnt=7");
-                ////URL url = new URL("https://api.getevents.co/event?&lat=51.50853&lng=9.93988&limit=3");
-                ////URL url = new URL("https://api.getevents.co/event?&lat=51.50853&lng=-0.12574&limit=3");
-
 
                 final String ITINERARY_BASE_URL = "https://api.meetup.com/2/open_events.json?date=,1w";
                 final String COUNTRY_PARAM = "country";
@@ -240,9 +236,7 @@ public class ItineraryFragment extends Fragment {
 
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
+
                     buffer.append(line + "\n");
                 }
 
@@ -255,8 +249,7 @@ public class ItineraryFragment extends Fragment {
 
             } catch (IOException e) {
                 Log.e("ItineraryFragment", "Error ", e);
-                // If the code didn't successfully get the weather data, there's no point in attemping
-                // to parse it.
+
                 return null;
             } finally {
                 if (urlConnection != null) {
@@ -323,16 +316,6 @@ public class ItineraryFragment extends Fragment {
         JSONObject itineraryJson = new JSONObject(itineraryJsonStr);
         JSONArray scheduleArray = itineraryJson.getJSONArray(MU_RESULTS);
 
-        ////JSONArray metaArray = itineraryJson.getJSONArray(MU_META);
-
-        // MU returns daily forecasts based upon the local time of the city that is being
-        // asked for, which means that we need to know the GMT offset to translate this data
-        // properly.
-
-        // Since this data is also sent in-order and the first day is always the
-        // current day, we're going to take advantage of that to get a nice
-        // normalized UTC date for all of our weather.
-
         Time dayTime = new Time();
         dayTime.setToNow();
 
@@ -350,31 +333,19 @@ public class ItineraryFragment extends Fragment {
             // Get the JSON object representing the day
             JSONObject daySchedule = scheduleArray.getJSONObject(i);
 
-            // The date/time is returned as a long.  We need to convert that
-            // into something human-readable, since most people won't read "1400356800" as
-            // "this saturday".
+
             long dateTime;
             // Cheating to convert this to UTC time, which is what we want anyhow
             dateTime = dayTime.setJulianDay(julianStartDay+i);
             day = getReadableDateString(dateTime);
 
-            // description is in a child array called "weather", which is 1 element long.
-            ////JSONObject venueObject = daySchedule.getJSONObject(MU_VENUE).getJSONObject(0);
-            ////JSONObject venueObject = daySchedule.getJSONObject(MU_VENUE);
-            ////JSONArray venueArray = daySchedule.getJSONArray(MU_VENUE);
-            /////String venuename = venueObject.getString(MU_VENUENAME);
-            ////String venueaddress = venueObject.getString(MU_VENUEADDRESS1);
 
-            // Temperatures are in a child object called "temp".  Try not to name variables
-            // "temp" when working with temperature.  It confuses everybody.
             JSONObject groupObject = daySchedule.getJSONObject(MU_GROUP);
             String groupname = groupObject.getString(MU_GRPNAME);
             String groupurlname = groupObject.getString(MU_GRPURLNAME);
 
             //highAndLow = formatHighLows(high, low);
             resultStrs[i] = day + "-" + "-" + groupname + "-" + groupurlname;
-
-
 
 
         }

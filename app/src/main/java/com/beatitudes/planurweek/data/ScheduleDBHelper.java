@@ -37,7 +37,7 @@ public class ScheduleDBHelper extends SQLiteOpenHelper{
 
                 ScheduleEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
 
-                // the ID of the location entry associated with this weather data
+
                 ScheduleEntry.COLUMN_LOC_KEY + " INTEGER NOT NULL, " +
                 ScheduleEntry.COLUMN_DATETEXT + " TEXT NOT NULL, " +
                 ScheduleEntry.COLUMN_EVENT_NAME + " TEXT NOT NULL, " +
