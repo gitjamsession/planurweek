@@ -1,5 +1,6 @@
 package com.beatitudes.planurweek.data;
 
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.net.Uri;
 import android.provider.BaseColumns;
@@ -53,20 +54,25 @@ public class ScheduleContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_LOCATION).build();
 
-        public static final String CONTENT_TYPE =
+        /*public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
         public static final String CONTENT_ITEM_TYPE =
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
+        */
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" +  CONTENT_AUTHORITY + "/" + PATH_LOCATION;
 
         // Table name
         public static final String TABLE_NAME = "location";
 
         public static final String COLUMN_LOCATION_SETTING = "location_setting";
 
-        public static final String
-                COLUMN_CITY_NAME = "city_name";
+        ////public static final String COLUMN_CITY_NAME = "city_name";
 
-       //// public static final String COLUMN_COUNTRY_CODE = "country_code";
+       public static final String COLUMN_COUNTRY_CODE = "country_code";
 
         public static Uri buildLocationUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
@@ -78,10 +84,16 @@ public class ScheduleContract {
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_SCHEDULE).build();
 
-        public static final String CONTENT_TYPE =
+        /***public static final String CONTENT_TYPE =
                 "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + PATH_SCHEDULE;
         public static final String CONTENT_ITEM_TYPE =
                 "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + PATH_SCHEDULE;
+        ***/
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_SCHEDULE;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" +  CONTENT_AUTHORITY + "/" + PATH_SCHEDULE;
 
         public static final String TABLE_NAME = "schedule";
 
@@ -95,15 +107,18 @@ public class ScheduleContract {
 
         public static final String COLUMN_GROUP_NAME = "group_name";
 
+        //REVIEW
+        //public  static final String COLUMN_GROUP_URL_NAME = "group_url_name";
+
         public static final String COLUMN_EVENT_URL = "event_url";
 
         public static final String COLUMN_EVENT_TIME = "event_time";
 
-        public static final String COLUMN_VENUE_NAME = "venue_name";
+//        public static final String COLUMN_VENUE_NAME = "venue_name";
 
-        public static final String COLUMN_VENUE_ADDRESS1 = "venue_address1";
+//        public static final String COLUMN_VENUE_ADDRESS1 = "venue_address1";
 
-        public static final String COLUMN_VENUE_CITY = "venue_city";
+//        public static final String COLUMN_VENUE_CITY = "venue_city";
 
         public static Uri buildScheduleUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
@@ -128,6 +143,7 @@ public class ScheduleContract {
         }
 
         public static String getDateFromUri(Uri uri) {
+
             return uri.getPathSegments().get(2);
         }
 

@@ -38,15 +38,15 @@ public class ScheduleProvider extends ContentProvider {
 
     private static final String sLocationSettingSelection =
             ScheduleContract.LocationEntry.TABLE_NAME+
-                    "." + ScheduleContract.LocationEntry.COLUMN_CITY_NAME + " = ? ";
+                    "." + ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ? ";
     private static final String sLocationSettingWithStartDateSelection =
             ScheduleContract.LocationEntry.TABLE_NAME+
-                    "." + ScheduleContract.LocationEntry.COLUMN_CITY_NAME + " = ? AND " +
+                    "." + ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ? AND " +
                     ScheduleContract.ScheduleEntry.COLUMN_DATETEXT + " >= ? ";
 
     private static final String sLocationSettingAndDaySelection =
             ScheduleContract.LocationEntry.TABLE_NAME +
-                    "." + ScheduleContract.LocationEntry.COLUMN_CITY_NAME + " = ? AND " +
+                    "." + ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ? AND " +
                     ScheduleContract.ScheduleEntry.COLUMN_DATETEXT + " = ? ";
 
     private Cursor getScheduleByLocationSetting(Uri uri, String[] projection, String sortOrder) {
@@ -152,6 +152,7 @@ public class ScheduleProvider extends ContentProvider {
                 int returnCount = 0;
                 try {
                     for (ContentValues value : values) {
+//                        normalizeDate(value);
                         long _id = db.insert(ScheduleContract.ScheduleEntry.TABLE_NAME, null, value);
                         if (_id != -1) {
                             returnCount++;
@@ -173,6 +174,7 @@ public class ScheduleProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
+
         switch (match) {
             case SCHEDULE:
                 rowsDeleted = db.delete(
@@ -185,7 +187,7 @@ public class ScheduleProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-        // Because a null deletes all rows
+
         if (selection == null || rowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -201,6 +203,7 @@ public class ScheduleProvider extends ContentProvider {
 
         switch (match) {
             case SCHEDULE:
+
                 rowsUpdated = db.update(ScheduleContract.ScheduleEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
@@ -211,6 +214,7 @@ public class ScheduleProvider extends ContentProvider {
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
+        //Notify for change only if some rows are actually updated
         if (rowsUpdated != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }

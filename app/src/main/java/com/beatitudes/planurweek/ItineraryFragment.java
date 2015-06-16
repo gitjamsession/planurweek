@@ -1,18 +1,13 @@
 package com.beatitudes.planurweek;
 
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-import android.text.format.Time;
-import android.util.Log;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,30 +15,43 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.beatitudes.planurweek.data.ScheduleContract;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Created by user on 25-05-2015.
  */
-public class ItineraryFragment extends Fragment {
+public class ItineraryFragment extends Fragment implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>{
 
-    private ArrayAdapter<String> mItineraryAdapter;
+    ////Doubtful
+    private SimpleCursorAdapter mItineraryAdapter;
+
+    private String mLocation;
+    public static final int ITINERARY_LOADER = 0;
+
+    ////private ArrayAdapter<String> mItineraryAdapter;
+
+    private static final String[] ITINERARY_COLUMNS = {
+
+            ScheduleContract.ScheduleEntry.TABLE_NAME + "." + ScheduleContract.ScheduleEntry._ID,
+            ScheduleContract.ScheduleEntry.COLUMN_DATETEXT,
+            ScheduleContract.ScheduleEntry.COLUMN_EVENT_NAME,
+            ScheduleContract.ScheduleEntry.COLUMN_GROUP_NAME,
+            ScheduleContract.ScheduleEntry.COLUMN_EVENT_URL,
+            ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING
+    };
+
+    public static final int COL_SCHEDULE_ID = 0;
+    public static final int COL_SCHEDULE_DATE = 1;
+    public static final int COL_SCHEDULE_EVENT_NAME = 2;
+    public static final int COL_SCHEDULE_GRP_NAME = 3;
+    public static final int COL_SCHEDULE_EVENT_URL_NAME = 4;
+    public static final int COL_LOCATION_SETTING = 5;
+
 
     public ItineraryFragment() {
     }
@@ -73,7 +81,8 @@ public class ItineraryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         //ArrayAdapter mItineraryAdapter;
-        mItineraryAdapter = new ArrayAdapter<String>(
+        /***mItineraryAdapter = new ArrayAdapter<String>(
+
                 //CONTEXT
                 getActivity(),
                 //List Item Layout ID
@@ -84,6 +93,47 @@ public class ItineraryFragment extends Fragment {
                 //Itinerary Data
                 new ArrayList<String>()
         );
+        ***/
+        mItineraryAdapter = new SimpleCursorAdapter(
+                getActivity(),
+                R.layout.list_item_itinerary,
+                null,
+                // the column names to use to fill the textviews
+                new String[]{ScheduleContract.ScheduleEntry.COLUMN_DATETEXT,
+                        ScheduleContract.ScheduleEntry.COLUMN_EVENT_NAME,
+//                        ScheduleContract.ScheduleEntry.COLUMN_GROUP_NAME,
+//                        ScheduleContract.ScheduleEntry.COLUMN_EVENT_URL,
+
+
+                },
+                // the textviews to fill with the data pulled from the columns above
+                new int[]{
+                          R.id.list_item_date_textview,
+                        R.id.list_item_itinerary_textview,
+//                        R.id.list_item_grpname_textview,
+//                        R.id.list_item_eventurlname_textview,
+//                        R.id.list_item_low_textview
+                },
+                0
+        );
+
+        mItineraryAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+
+                switch (columnIndex) {
+
+                    case COL_SCHEDULE_DATE: {
+                        String dateString = cursor.getString(columnIndex);
+                        TextView dateView = (TextView) view;
+                        dateView.setText(Utility.formatDate(dateString));
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
@@ -108,11 +158,19 @@ public class ItineraryFragment extends Fragment {
             @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int position, long l)
             {
-                String itinerary = mItineraryAdapter.getItem(position);
+//                String itinerary = mItineraryAdapter.getItem(position);
                 //Use Intent instead of Toast
                 // Toast.makeText(getActivity(),itinerary,Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getActivity(),DetailActivity.class).putExtra(Intent.EXTRA_TEXT,itinerary);
-                startActivity(intent);
+//                Intent intent = new Intent(getActivity(),DetailActivity.class).putExtra(Intent.EXTRA_TEXT,itinerary);
+//                startActivity(intent);
+                Cursor cursor = mItineraryAdapter.getCursor();
+                if (cursor != null && cursor.moveToPosition(position)) {
+                    Intent intent = new Intent(getActivity(), DetailActivity.class)
+                            .putExtra(DetailActivity.DetailFragment.DATE_KEY, cursor.getString(COL_SCHEDULE_DATE));
+//                    Intent intent = new Intent(getActivity(),DetailActivity.class).putExtra(Intent.EXTRA_TEXT,cursor.getString());
+                    startActivity(intent);
+                }
+
             }
         });
 
@@ -120,14 +178,34 @@ public class ItineraryFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(ITINERARY_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+
+
     private void updateSchedule(){
 
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(getActivity());
+//        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(getActivity());
         ////FetchScheduleTask scheduleTask = new FetchScheduleTask();
 
-        String location = prefs.getString(getString(R.string.pref_location_key),getString(R.string.pref_location_default));
-        String countrycode = prefs.getString(getString(R.string.pref_countrycode_key),getString(R.string.pref_countrycode_default));
+//        String location = prefs.getString(getString(R.string.pref_location_key),getString(R.string.pref_location_default));
+//        String countrycode = prefs.getString(getString(R.string.pref_countrycode_key),getString(R.string.pref_countrycode_default));
+//        new FetchScheduleTask(getActivity(),mItineraryAdapter).execute(countrycode,location);
+        String location = Utility.getPreferredLocation(getActivity());
+        String countrycode = Utility.getPreferredCountryCode(getActivity());
         new FetchScheduleTask(getActivity()).execute(countrycode,location);
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mLocation != null && !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
+            getLoaderManager().restartLoader(ITINERARY_LOADER, null, this);
+        }
     }
 
     @Override
@@ -136,224 +214,38 @@ public class ItineraryFragment extends Fragment {
         updateSchedule();
     }
 
-    public class FetchScheduleTask extends AsyncTask<String, Void, String[]> {
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        public final String LOG_TAG = ItineraryFragment.class.getSimpleName();
-        private final Context mContext;
+        String startDate = ScheduleContract.getDbDateString(new Date());
 
-        /***public FetchScheduleTask(FragmentActivity activity) {
-        }***/
-        public FetchScheduleTask(Context context) {
-            mContext = context;
-        }
+        // Sort order:  Ascending, by date.
+        String sortOrder = ScheduleContract.ScheduleEntry.COLUMN_DATETEXT + " ASC";
 
-        private long addLocation(String locationSetting, String cityName){ ////, double lat, double lon) {
+        mLocation = Utility.getPreferredLocation(getActivity());
+        Uri scheduleForLocationUri = ScheduleContract.ScheduleEntry.buildScheduleLocationWithStartDate(
+                mLocation, startDate);
 
-            // First, check if the location with this city name exists in the db
-            Cursor cursor = mContext.getContentResolver().query(
-                    ScheduleContract.LocationEntry.CONTENT_URI,
-                    new String[]{ScheduleContract.LocationEntry._ID},
-                    ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
-                    new String[]{locationSetting},
-                    null);
-
-            if (cursor.moveToFirst()) {
-                int locationIdIndex = cursor.getColumnIndex(ScheduleContract.LocationEntry._ID);
-                return cursor.getLong(locationIdIndex);
-            } else {
-                ContentValues locationValues = new ContentValues();
-                locationValues.put(ScheduleContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
-                locationValues.put(ScheduleContract.LocationEntry.COLUMN_CITY_NAME, cityName);
-                ////locationValues.put(LocationEntry.COLUMN_COORD_LAT, lat);
-                ////locationValues.put(LocationEntry.COLUMN_COORD_LONG, lon);
-
-                Uri locationInsertUri = mContext.getContentResolver()
-                        .insert(ScheduleContract.LocationEntry.CONTENT_URI, locationValues);
-
-                return ContentUris.parseId(locationInsertUri);
-            }
-        }
-
-
-        @Override
-        protected String[] doInBackground(String... params) {
-
-            // These two need to be declared outside the try/catch
-            // so that they can be closed in the finally block.
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-
-            // Will contain the raw JSON response as a string.
-            String itineraryJsonStr = null;
-
-            if (params.length == 0) {
-                return null;
-            }
-            String locationQuery = params[1];
-            String cityName = params[0];
-
-            String status = "upcoming";
-
-            String time = "&date=,1w";
-
-            String key = "463f4e2e2d37672b55636f9636921";
-
-            int numDays = 7;
-
-            try {
-
-
-                final String ITINERARY_BASE_URL = "https://api.meetup.com/2/open_events.json?date=,1w";
-                final String COUNTRY_PARAM = "country";
-                final String CITY_PARAM = "city";
-                ////final String STATUS_PARAM= "status";
-                final String TIME_PARAM = "time";
-                final String KEY_PARAM = "key";
-
-                Uri builtUri = Uri.parse(ITINERARY_BASE_URL).buildUpon()
-                                .appendQueryParameter(COUNTRY_PARAM,params[0])
-                                .appendQueryParameter(CITY_PARAM,params[1])
-                                //.appendQueryParameter(STATUS_PARAM, status)
-                                //.appendQueryParameter(TIME_PARAM,time)
-                                .appendQueryParameter(KEY_PARAM,key)
-                                .build();
-                URL url = new URL(builtUri.toString());
-                Log.v(LOG_TAG, "Built URI" + builtUri.toString());
-
-
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    return null;
-                }
-                itineraryJsonStr = buffer.toString();
-                Log.v(LOG_TAG,"Itinerary JSON String"+itineraryJsonStr);
-
-            } catch (IOException e) {
-                Log.e("ItineraryFragment", "Error ", e);
-
-                return null;
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e("ItineraryFragment", "Error closing stream", e);
-                    }
-                }
-            }
-            try {
-                return getScheduleDataFromJson(itineraryJsonStr,numDays,locationQuery,cityName);
-            }catch (JSONException e){
-                Log.e(LOG_TAG,e.getMessage(),e);
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String[] result) {
-
-            //super.onPostExecute(result);
-            if(result!=null){
-                mItineraryAdapter.clear();
-                for(String itineraryJsonStr : result)
-                {
-                    mItineraryAdapter.add(itineraryJsonStr);
-                }
-            }
-        }
+        // Now create and return a CursorLoader that will take care of
+        // creating a Cursor for the data being displayed.
+        return new CursorLoader(
+                getActivity(),
+                scheduleForLocationUri,
+                ITINERARY_COLUMNS,
+                null,
+                null,
+                sortOrder
+        );
     }
 
-
-    
-
-    private String getReadableDateString(long time){
-        // Because the API returns a unix timestamp (measured in seconds),
-        // it must be converted to milliseconds in order to be converted to valid date.
-        SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd");
-        return shortenedDateFormat.format(time);
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mItineraryAdapter.swapCursor(data);
     }
 
-    private String[] getScheduleDataFromJson(String itineraryJsonStr,int numDays, String locationSetting, String cityName)
-            throws JSONException {
-
-        // These are the names of the JSON objects that need to be extracted.
-        final String MU_RESULTS = "results";
-        final String MU_VENUE = "venue";
-        final String MU_VENUENAME = "name";
-        final String MU_VENUEADDRESS1 = "address_1";
-
-        final String MU_GROUP = "group";
-        final String MU_GRPNAME = "name";
-        final String MU_GRPURLNAME = "urlname";
-        final String MU_EVENTURL = "event_url";
-
-        final String MU_META = "meta";
-        final String MU_METATOTALCOUNT = "total_count";
-
-        JSONObject itineraryJson = new JSONObject(itineraryJsonStr);
-        JSONArray scheduleArray = itineraryJson.getJSONArray(MU_RESULTS);
-
-        Time dayTime = new Time();
-        dayTime.setToNow();
-
-        // we start at the day returned by local time. Otherwise this is a mess.
-        int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
-
-        // now we work exclusively in UTC
-        dayTime = new Time();
-
-        String[] resultStrs = new String[scheduleArray.length()];
-        for(int i = 0; i < scheduleArray.length(); i++) {
-            // For now, using the format "Day, description, hi/low"
-            String day;
-
-            // Get the JSON object representing the day
-            JSONObject daySchedule = scheduleArray.getJSONObject(i);
-
-
-            long dateTime;
-            // Cheating to convert this to UTC time, which is what we want anyhow
-            dateTime = dayTime.setJulianDay(julianStartDay+i);
-            day = getReadableDateString(dateTime);
-
-
-            JSONObject groupObject = daySchedule.getJSONObject(MU_GROUP);
-            String groupname = groupObject.getString(MU_GRPNAME);
-            String groupurlname = groupObject.getString(MU_GRPURLNAME);
-
-            //highAndLow = formatHighLows(high, low);
-            resultStrs[i] = day + "-" + "-" + groupname + "-" + groupurlname;
-
-
-        }
-
-        for (String s : resultStrs) {
-            Log.v("RESULT_STRING", "Schedule entry: " + s);
-        }
-        return resultStrs;
-
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mItineraryAdapter.swapCursor(null);
     }
+
 }

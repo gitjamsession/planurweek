@@ -12,7 +12,7 @@ import com.beatitudes.planurweek.data.ScheduleContract.ScheduleEntry;
  */
 public class ScheduleDBHelper extends SQLiteOpenHelper{
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 4;
     public static final String DATABASE_NAME = "schedule.db";
 
 
@@ -26,9 +26,10 @@ public class ScheduleDBHelper extends SQLiteOpenHelper{
         // location setting, the city name, and the latitude and longitude
         final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " + LocationEntry.TABLE_NAME + " (" +
                 LocationEntry._ID + " INTEGER PRIMARY KEY," +
-                LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL, " +
-                LocationEntry.COLUMN_CITY_NAME + " TEXT NOT NULL, " +
-                ////LocationEntry.COLUMN_COUNTRY_CODE + " TEXT NOT NULL " +
+                ////LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL, " +
+                LocationEntry.COLUMN_LOCATION_SETTING + " TEXT NOT NULL, " +
+                ////LocationEntry.COLUMN_CITY_NAME + " TEXT NOT NULL, " +
+                LocationEntry.COLUMN_COUNTRY_CODE + " TEXT NOT NULL " +
 
 
                 " );";
@@ -47,9 +48,9 @@ public class ScheduleDBHelper extends SQLiteOpenHelper{
                 ScheduleEntry.COLUMN_EVENT_URL + " TEXT NOT NULL, " +
 
                 ScheduleEntry.COLUMN_EVENT_TIME + " REAL NOT NULL, " +
-                ScheduleEntry.COLUMN_VENUE_NAME + " TEXT NOT NULL, " +
-                ScheduleEntry.COLUMN_VENUE_ADDRESS1 + " TEXT NOT NULL, " +
-                ScheduleEntry.COLUMN_VENUE_CITY + " TEXT NOT NULL, " +
+//                ScheduleEntry.COLUMN_VENUE_NAME + " TEXT NOT NULL, " +
+//                ScheduleEntry.COLUMN_VENUE_ADDRESS1 + " TEXT NOT NULL, " +
+//                ScheduleEntry.COLUMN_VENUE_CITY + " TEXT NOT NULL, " +
 
                 // Set up the location column as a foreign key to location table.
                 " FOREIGN KEY (" + ScheduleEntry.COLUMN_LOC_KEY + ") REFERENCES " +
