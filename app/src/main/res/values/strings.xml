@@ -1,4 +1,6 @@
-<resources>
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
+
     <string name="app_name">planurweek</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
@@ -7,8 +9,18 @@
     <string name="title_activity_detail">DetailActivity</string>
     <string name="pref_location_key" translatable="false">location</string>
     <string name="pref_location_label" >Location</string>
-    <string name="pref_location_default">Kochi</string>
+    <string name="pref_location_default">Bangalore</string>
     <string name="pref_countrycode_key" translatable="false">country code</string>
     <string name="pref_countrycode_label" translatable="false">Country Code</string>
     <string name="pref_countrycode_default" translatable="false">IN</string>
+
+    <string name="today">Today</string>
+
+
+    <string name="tomorrow">Tomorrow</string>
+
+
+    <string name="format_full_friendly_date">
+        <xliff:g id="day">%1$s</xliff:g>, <xliff:g id="date">%2$s</xliff:g>
+    </string>
 </resources>

@@ -211,7 +211,7 @@ public class FetchScheduleTask extends AsyncTask<String, Void, Void> {
         try {
 
 
-            final String ITINERARY_BASE_URL = "https://api.meetup.com/2/open_events.json?time=,1w";
+            final String ITINERARY_BASE_URL = "https://api.meetup.com/2/open_events.json?";
             final String COUNTRY_PARAM = "country";
             final String CITY_PARAM = "city";
             ////final String STATUS_PARAM= "status";

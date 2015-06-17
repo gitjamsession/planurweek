@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.beatitudes.planurweek.data.ScheduleContract;
 
@@ -27,8 +25,9 @@ import java.util.Date;
  */
 public class ItineraryFragment extends Fragment implements android.support.v4.app.LoaderManager.LoaderCallbacks<Cursor>{
 
-    ////Doubtful
-    private SimpleCursorAdapter mItineraryAdapter;
+
+    ////private SimpleCursorAdapter mItineraryAdapter;
+    private ItineraryAdapter mItineraryAdapter;
 
     private String mLocation;
     public static final int ITINERARY_LOADER = 0;
@@ -94,7 +93,7 @@ public class ItineraryFragment extends Fragment implements android.support.v4.ap
                 new ArrayList<String>()
         );
         ***/
-        mItineraryAdapter = new SimpleCursorAdapter(
+        /***mItineraryAdapter = new SimpleCursorAdapter(
                 getActivity(),
                 R.layout.list_item_itinerary,
                 null,
@@ -116,8 +115,10 @@ public class ItineraryFragment extends Fragment implements android.support.v4.ap
                 },
                 0
         );
+***/
+        mItineraryAdapter = new ItineraryAdapter(getActivity(), null, 0);
 
-        mItineraryAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+/***        mItineraryAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
 
@@ -134,7 +135,7 @@ public class ItineraryFragment extends Fragment implements android.support.v4.ap
             }
         });
 
-
+***/
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
        /***String[] itineraryArray = {
@@ -149,10 +150,11 @@ public class ItineraryFragment extends Fragment implements android.support.v4.ap
         ////List<String> weekItinerary = new ArrayList<String>(Arrays.asList(itineraryArray));
 
 
-
+/***
         ListView listView = (ListView) rootView.findViewById(R.id.listView_itinerary);
         // Binding Adapter to ListView
         listView.setAdapter(mItineraryAdapter);
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
@@ -174,6 +176,21 @@ public class ItineraryFragment extends Fragment implements android.support.v4.ap
             }
         });
 
+***/
+        ListView listView = (ListView) rootView.findViewById(R.id.listView_itinerary);
+        listView.setAdapter(mItineraryAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                Cursor cursor = mItineraryAdapter.getCursor();
+                if (cursor != null && cursor.moveToPosition(position)) {
+                    Intent intent = new Intent(getActivity(), DetailActivity.class)
+                            .putExtra(DetailActivity.DetailFragment.DATE_KEY, cursor.getString(COL_SCHEDULE_DATE));
+                    startActivity(intent);
+                }
+            }
+        });
 
         return rootView;
     }
